@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CALI</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg: #0a0a0a;
+  --surface: #111;
+  --surface2: #181818;
+  --border: #222;
+  --accent: #c8f135;
+  --accent2: #ff5c38;
+  --text: #f0ede6;
+  --muted: #555;
+  --done: #1e2a0d;
+  --done-border: #4a7a10;
+}
+
+body.light {
+  --bg: #f5f5f0;
+  --surface: #fff;
+  --surface2: #f0ede6;
+  --border: #ddd;
+  --text: #111;
+  --muted: #888;
+  --done: #e8f5d0;
+  --done-border: #8bc34a;
+}
+
+/* ===== GLOBAL SMOOTHNESS ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  transition: background 0.25s ease, color 0.25s ease, transform 0.15s ease;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+button:active {
+  transform: scale(0.94);
+}
+
+/* ===== HEADER ===== */
+header {
+  display: flex;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+}
+
+.logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px;
+  color: var(--accent);
+}
+
+/* ===== TABS ===== */
+.nav-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+}
+
+.nav-tab {
+  flex: 1;
+  padding: 10px;
+  background: none;
+  border: none;
+  font-family: 'DM Mono';
+  font-size: 10px;
+  color: var(--muted);
+  border-bottom: 2px solid transparent;
+}
+
+.nav-tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* ===== DAY ANIMATION ===== */
+.fade-in {
+  animation: fadeSlide 0.35s ease;
+}
+
+@keyframes fadeSlide {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== EXERCISES ===== */
+.exercise-row {
+  display: flex;
+  gap: 12px;
+  padding: 11px;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-bottom: 4px;
+  border: 1px solid transparent;
+}
+
+.exercise-row:active {
+  transform: scale(0.97);
+}
+
+.exercise-row.done {
+  background: var(--done);
+  border-color: var(--done-border);
+}
+
+.exercise-row.done .ex-name {
+  text-decoration: line-through;
+  color: #5a7a30;
+}
+
+.check-box {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 1.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.exercise-row.done .check-box {
+  background: var(--accent);
+  transform: scale(1.15);
+}
+
+/* ===== MODAL ===== */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+}
+
+.modal-overlay.open {
+  display: flex;
+  align-items: flex-end;
+}
+
+.modal {
+  background: var(--surface);
+  border-radius: 16px 16px 0 0;
+  padding: 24px;
+  width: 100%;
+  animation: slideUp 0.25s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(40px); }
+  to { transform: translateY(0); }
+}
+
+/* ===== TIMER ===== */
+#timerBig {
+  font-family: 'DM Mono';
+  font-size: 64px;
+  color: var(--accent);
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">CALI—</div>
+</header>
+
+<div class="nav-tabs">
+  <button class="nav-tab active">Workout</button>
+  <button class="nav-tab">Stats</button>
+  <button class="nav-tab">Custom</button>
+</div>
+
+<div id="mainContent"></div>
+
+<!-- TIMER -->
+<div class="modal-overlay" id="timerOverlay">
+  <div class="modal">
+    <div id="timerBig">1:30</div>
+    <button onclick="toggleTimer()">Start / Pause</button>
+  </div>
+</div>
+
+<script>
+
+/* ===== BASIC NOTIFICATIONS ===== */
+function notify(title, body){
+  if(Notification.permission === "granted"){
+    new Notification(title,{body});
+  }
+}
+
+Notification.requestPermission();
+
+/* ===== SIMPLE TIMER ===== */
+let timer = 90;
+let running = false;
+let interval;
+
+function toggleTimer(){
+  if(running){
+    clearInterval(interval);
+    running = false;
+    return;
+  }
+
+  running = true;
+
+  interval = setInterval(()=>{
+    timer--;
+    updateTimer();
+
+    if(timer <= 0){
+      clearInterval(interval);
+      running = false;
+      navigator.vibrate?.(200);
+      notify("Rest Done","Start your next set 💪");
+    }
+  },1000);
+}
+
+function updateTimer(){
+  let m = Math.floor(timer/60);
+  let s = timer%60;
+  document.getElementById("timerBig").innerText =
+    m + ":" + (s<10?"0":"") + s;
+}
+
+/* ===== SAMPLE CONTENT ===== */
+const main = document.getElementById("mainContent");
+
+main.innerHTML = `
+<div class="fade-in">
+
+<div class="exercise-row" onclick="this.classList.toggle('done')">
+  <div class="check-box"></div>
+  <div class="ex-name">Push Ups</div>
+</div>
+
+<div class="exercise-row" onclick="this.classList.toggle('done')">
+  <div class="check-box"></div>
+  <div class="ex-name">Pull Ups</div>
+</div>
+
+<button onclick="document.getElementById('timerOverlay').classList.add('open')">
+Open Timer
+</button>
+
+</div>
+`;
+
+</script>
+
+</body>
+</html>
