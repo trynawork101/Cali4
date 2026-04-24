@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CALI</title>
+<meta name="theme-color" content="#0a0a0a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CALI">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0a; --surface: #111; --surface2: #181818;
+  --border: #222; --accent: #c8f135; --accent2: #ff5c38;
+  --text: #f0ede6; --muted: #555; --done: #1e2a0d; --done-border: #4a7a10;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
+header { display: flex; align-items: center; justify-content: space-between; padding: 24px 28px 20px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: rgba(10,10,10,0.95); z-index: 100; }
+.logo { font-family: 'Bebas Neue', sans-serif; font-size: 32px; letter-spacing: 4px; color: var(--accent); }
+.logo span { color: var(--text); }
+.week-badge { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); background: var(--surface2); border: 1px solid var(--border); padding: 6px 12px; border-radius: 4px; letter-spacing: 1px; text-transform: uppercase; }
+.day-tabs { display: flex; overflow-x: auto; border-bottom: 1px solid var(--border); scrollbar-width: none; }
+.day-tabs::-webkit-scrollbar { display: none; }
+.day-tab { flex-shrink: 0; padding: 14px 20px; font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; border: none; background: transparent; color: var(--muted); border-bottom: 2px solid transparent; position: relative; top: 1px; }
+.day-tab.active { color: var(--accent); border-bottom-color: var(--accent); background: var(--surface); }
+.day-tab.rest-day { color: #444; }
+.day-tab.rest-day.active { color: var(--muted); border-bottom-color: var(--muted); }
+.main { max-width: 740px; margin: 0 auto; padding: 0 20px 80px; }
+.day-header { display: flex; align-items: flex-end; justify-content: space-between; padding: 32px 0 24px; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
+.day-title { font-family: 'Bebas Neue', sans-serif; font-size: 52px; line-height: 1; letter-spacing: 2px; }
+.day-subtitle { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-top: 6px; }
+.progress-ring-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.progress-ring { position: relative; width: 64px; height: 64px; }
+.progress-ring svg { transform: rotate(-90deg); }
+.progress-ring .track { fill: none; stroke: var(--border); stroke-width: 3; }
+.progress-ring .fill { fill: none; stroke: var(--accent); stroke-width: 3; stroke-linecap: round; transition: stroke-dashoffset 0.4s; }
+.progress-pct { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500; color: var(--accent); }
+.progress-label { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; }
+.section { margin-bottom: 24px; }
+.section-label { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; padding: 0 0 10px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+.section-label.warmup-label { color: #4a9eff; }
+.section-label.skill-label { color: var(--accent2); }
+.section-label.strength-label { color: var(--accent); }
+.section-label.mobility-label { color: #b78fff; }
+.section-label.explosive-label { color: #ff9b38; }
+.exercise-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 8px; cursor: pointer; border: 1px solid transparent; margin-bottom: 4px; -webkit-tap-highlight-color: transparent; }
+.exercise-row.done { background: var(--done); border-color: var(--done-border); }
+.exercise-row.done .ex-name { text-decoration: line-through; color: #5a7a30; }
+.exercise-row.done .ex-detail { color: #3d5520; }
+.exercise-row.done .check-box { background: var(--accent); border-color: var(--accent); color: #0a0a0a; font-weight: 700; font-size: 12px; }
+.check-box { width: 22px; height: 22px; border-radius: 5px; border: 1.5px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.ex-info { flex: 1; min-width: 0; }
+.ex-name { font-size: 14px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ex-detail { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); margin-top: 2px; }
+.ex-tag { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; padding: 3px 7px; border-radius: 3px; flex-shrink: 0; }
+.tag-skill { background: rgba(255,92,56,0.15); color: #ff5c38; border: 1px solid rgba(255,92,56,0.25); }
+.tag-hs { background: rgba(255,155,56,0.15); color: #ff9b38; border: 1px solid rgba(255,155,56,0.25); }
+.tag-core { background: rgba(200,241,53,0.1); color: #c8f135; border: 1px solid rgba(200,241,53,0.2); }
+.note-row { padding: 6px 14px 6px 48px; font-size: 12px; color: #444; line-height: 1.5; margin: -4px 0 6px 36px; font-style: italic; border-left: 2px solid #1e1e1e; }
+.rest-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 40px 28px; text-align: center; margin-top: 12px; }
+.rest-icon { font-size: 40px; margin-bottom: 16px; }
+.rest-title { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 3px; color: var(--muted); margin-bottom: 8px; }
+.rest-desc { font-size: 13px; color: #444; line-height: 1.6; }
+.deload-banner { background: rgba(255,92,56,0.08); border: 1px solid rgba(255,92,56,0.2); border-radius: 8px; padding: 14px 18px; margin-top: 8px; display: flex; align-items: center; gap: 12px; }
+.deload-text { font-family: 'DM Mono', monospace; font-size: 11px; color: #ff5c38; }
+.reset-btn { background: transparent; border: 1px solid var(--border); color: var(--muted); font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; padding: 7px 14px; border-radius: 5px; cursor: pointer; }
+.complete-banner { background: rgba(200,241,53,0.08); border: 1px solid rgba(200,241,53,0.3); border-radius: 8px; padding: 16px 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
+.complete-text { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--accent); }
+.complete-text strong { display: block; font-size: 13px; margin-bottom: 2px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">CALI<span>&#8212;</span></div>
+  <div id="weekBadge" class="week-badge">WEEK 1</div>
+</header>
+<div class="day-tabs" id="dayTabs"></div>
+<div class="main" id="mainContent"></div>
+<script>
+var DAYS = [
+  { id:'mon', label:'Mon', title:'PUSH', subtitle:'Core', sections:[
+    { id:'w', label:'Warm-Up', type:'warmup', exercises:[
+      { name:'Arm Circles', detail:'30 sec forward / 30 sec backward' },
+      { name:'Wall Push-Ups', detail:'2 x 10 easy pace' },
+      { name:'Shoulder Taps', detail:'2 x 10 each side' },
+      { name:'Wrist Prep on Floor', detail:'1 min rock forward/back' },
+      { name:'Slow Bodyweight Squats', detail:'1 x 15' },
+      { name:'Palm Lifts', detail:'2 x 1 min fingers down lift palms' }
+    ]},
+    { id:'s', label:'Skill Progression', type:'skill', exercises:[
+      { name:'Frog Stand', detail:'3 x 20 sec', tag:'skill' },
+      { name:'Wall Walk', detail:'3 reps', tag:'skill' },
+      { name:'Kick-Up Attempts', detail:'5 to 8 tries', tag:'skill' },
+      { name:'Wall Handstand Hold', detail:'3 x 20 to 40 sec', tag:'hs' }
+    ]},
+    { id:'t', label:'Strength', type:'strength', exercises:[
+      { name:'Push-Ups', detail:'4 x 20' },
+      { name:'Decline Push-Ups', detail:'3 x 12' },
+      { name:'Chair Dips', detail:'3 x 10' },
+      { name:'Plank', detail:'3 x 75 sec', tag:'core' },
+      { name:'Side Plank', detail:'2 x 30 sec each side', tag:'core' },
+      { name:'Hanging Knee Raises', detail:'3 x 10', tag:'core' }
+    ]}
+  ]},
+  { id:'tue', label:'Tue', title:'PULL', subtitle:'Back and Grip', sections:[
+    { id:'w', label:'Warm-Up', type:'warmup', exercises:[
+      { name:'Dead Hangs', detail:'2 x 15 to 20 sec easy grip' },
+      { name:'Scapular Pull-Ups', detail:'2 x 8' },
+      { name:'Arm Swings', detail:'30 sec front and back' },
+      { name:'Jumping Jacks', detail:'1 to 2 min' },
+      { name:'Chest Stretch doorway', detail:'30 sec each side' }
+    ]},
+    { id:'b', label:'Back Balance', type:'skill', exercises:[
+      { name:'Inverted Rows', detail:'3 x 8 to 12', tag:'skill' }
+    ]},
+    { id:'s', label:'Skill', type:'skill', exercises:[
+      { name:'Wall Walks', detail:'3 to 5 reps', tag:'skill' },
+      { name:'Kick-Ups', detail:'5 attempts', tag:'hs' }
+    ]},
+    { id:'t', label:'Strength', type:'strength', exercises:[
+      { name:'Pull-Ups', detail:'4 x 5' },
+      { name:'Chin-Ups', detail:'3 x 6' },
+      { name:'Slow Negatives', detail:'3 x 3 five sec down' },
+      { name:'Dead Hangs', detail:'3 x 40 sec' }
+    ]}
+  ]},
+  { id:'wed', label:'Wed', title:'LEGS', subtitle:'Lower Body', sections:[
+    { id:'w', label:'Warm-Up', type:'warmup', exercises:[
+      { name:'Bodyweight Squats', detail:'2 x 12 slow and controlled' },
+      { name:'Front and Back Leg Swings', detail:'10 each leg' },
+      { name:'Side Leg Swings', detail:'10 each leg' },
+      { name:'High Knees', detail:'1 min' },
+      { name:'Hip Circles', detail:'30 sec each direction' }
+    ]},
+    { id:'e', label:'Explosive Power', type:'explosive', exercises:[
+      { name:'Jump Squats', detail:'3 x 10' },
+      { name:'Broad Jumps', detail:'3 x 5' }
+    ]},
+    { id:'t', label:'Strength', type:'strength', exercises:[
+      { name:'Squats', detail:'4 x 18' },
+      { name:'Lunges', detail:'3 x 10 each leg' },
+      { name:'Jump Squats', detail:'3 x 10' },
+      { name:'Wall Sit', detail:'2 x 60 sec' }
+    ]}
+  ]},
+  { id:'thu', label:'Thu', title:'REST', subtitle:'Recovery', rest:true, restNote:'Full rest. Light stretching 5 to 10 min if desired. Optional easy walk.' },
+  { id:'fri', label:'Fri', title:'UPPER', subtitle:'Full Upper Body', sections:[
+    { id:'w', label:'Warm-Up', type:'warmup', exercises:[
+      { name:'Jumping Jacks', detail:'2 min' },
+      { name:'Wall Push-Ups', detail:'2 x 12' },
+      { name:'Scapular Push-Ups', detail:'2 x 10 on floor' },
+      { name:'Dead Hang light', detail:'1 to 2 x 15 sec' },
+      { name:'Wrist Circles and Floor Rock', detail:'1 min' }
+    ]},
+    { id:'t', label:'Strength', type:'strength', exercises:[
+      { name:'Pull-Ups', detail:'5 x 5' },
+      { name:'Push-Ups', detail:'4 x 25' },
+      { name:'Chair Dips', detail:'3 x 10' },
+      { name:'Hanging Knee Raises', detail:'3 x 12', tag:'core' },
+      { name:'Plank', detail:'2 x 75 sec', tag:'core' },
+      { name:'Wall Handstand Hold', detail:'3 x 20 to 40 sec', tag:'hs' }
+    ]}
+  ]},
+  { id:'sat', label:'Sat', title:'SKILLS', subtitle:'Squash Mobility', sections:[
+    { id:'w', label:'Warm-Up', type:'warmup', exercises:[
+      { name:'Light Jog or Jumping Jacks', detail:'2 to 3 min' },
+      { name:'Shoulder Rolls', detail:'30 sec each direction' },
+      { name:'Easy Squats', detail:'1 x 15' },
+      { name:'Dead Hang', detail:'1 x 15 sec' },
+      { name:'Wrist Mobility on Floor', detail:'1 min' }
+    ]},
+    { id:'s', label:'Skills', type:'skill', exercises:[
+      { name:'Pull-Up Practice', detail:'10 min total', tag:'skill' },
+      { name:'Dead Hangs', detail:'3 x 45 sec' },
+      { name:'Core Circuit', detail:'10 to 15 min', tag:'core' },
+      { name:'Push-Up Burnout', detail:'1 set to max' },
+      { name:'Handstand Practice', detail:'5 to 10 min kick up hold wall control', tag:'hs' }
+    ]},
+    { id:'m', label:'Squash Mobility', type:'mobility', exercises:[
+      { name:'Hip Flexor Stretch', detail:'2 x 30 sec each side', note:'Lunge with knee on ground. Push hips forward torso upright.' },
+      { name:'Hamstring Stretch', detail:'2 x 30 sec each leg', note:'One leg straight reach toward toes back straight.' },
+      { name:'Adductor Stretch', detail:'2 x 30 sec', note:'Legs wide shift weight to one side other leg straight. Chest up.' },
+      { name:'Calf Stretch wall', detail:'2 x 30 sec each leg', note:'Hands on wall step leg back press heel into ground.' },
+      { name:'Thoracic Rotation open book', detail:'2 x 10 reps each side', note:'Lie on side knees bent rotate top arm across body then open back.' },
+      { name:'Shoulder Stretch across body', detail:'2 x 30 sec each arm', note:'Arm across chest other arm pulls it closer. Shoulders relaxed.' }
+    ]},
+    { id:'e', label:'Explosive Conditioning', type:'explosive', exercises:[
+      { name:'Burpees', detail:'3 x 10' }
+    ]}
+  ]},
+  { id:'sun', label:'Sun', title:'REST', subtitle:'Full Recovery', rest:true, restNote:'Complete rest. Let your body recover and rebuild. You earned it.' }
+];
+
+var state = {};
+try { state = JSON.parse(localStorage.getItem(‘cali_state’) || ‘{}’); } catch(e) {}
+var activeDay = localStorage.getItem(‘cali_day’) || ‘mon’;
+
+function key(d,s,i) { return d+’*’+s+’*’+i; }
+
+function progress(day) {
+if (day.rest) return {done:0,total:0};
+var t=0,d=0;
+day.sections.forEach(function(sec) {
+sec.exercises.forEach(function(_,i) { t++; if(state[key(day.id,sec.id,i)]) d++; });
+});
+return {done:d,total:t};
+}
+
+function renderTabs() {
+var el = document.getElementById(‘dayTabs’);
+el.innerHTML = ‘’;
+DAYS.forEach(function(day) {
+var btn = document.createElement(‘button’);
+var p = progress(day);
+var cls = ‘day-tab’;
+if (day.rest) cls += ’ rest-day’;
+if (day.id === activeDay) cls += ’ active’;
+btn.className = cls;
+btn.textContent = day.label;
+btn.addEventListener(‘click’, function() {
+activeDay = day.id;
+try { localStorage.setItem(‘cali_day’, day.id); } catch(e) {}
+renderTabs();
+renderMain();
+});
+el.appendChild(btn);
+});
+}
+
+function make(tag, cls, text) {
+var el = document.createElement(tag);
+if (cls) el.className = cls;
+if (text !== undefined) el.textContent = text;
+return el;
+}
+
+function renderMain() {
+var day = null;
+for (var i=0; i<DAYS.length; i++) { if (DAYS[i].id === activeDay) { day = DAYS[i]; break; } }
+var main = document.getElementById(‘mainContent’);
+main.innerHTML = ‘’;
+
+var p = progress(day);
+var r = 26, circ = 2 * Math.PI * r;
+var pct = p.total > 0 ? Math.round((p.done/p.total)*100) : 0;
+var offset = circ - (pct/100) * circ;
+
+// Header
+var hdr = make(‘div’, ‘day-header’);
+var hdrLeft = make(‘div’);
+var title = make(‘div’, ‘day-title’, day.title);
+var sub = make(‘div’, ‘day-subtitle’, day.subtitle);
+hdrLeft.appendChild(title);
+hdrLeft.appendChild(sub);
+hdr.appendChild(hdrLeft);
+
+if (!day.rest) {
+var hdrRight = make(‘div’);
+hdrRight.style.cssText = ‘display:flex;align-items:center;gap:12px;’;
+var resetBtn = make(‘button’, ‘reset-btn’, ‘Reset’);
+(function(d) { resetBtn.addEventListener(‘click’, function() { resetDay(d); }); })(day.id);
+var ringWrap = make(‘div’, ‘progress-ring-wrap’);
+var ring = make(‘div’, ‘progress-ring’);
+ring.innerHTML = ‘<svg width="64" height="64" viewBox="0 0 64 64"><circle class="track" cx="32" cy="32" r="'+r+'"/><circle class="fill" cx="32" cy="32" r="'+r+'" stroke-dasharray="'+circ.toFixed(2)+'" stroke-dashoffset="'+offset.toFixed(2)+'"/></svg>’;
+var pctEl = make(‘div’, ‘progress-pct’, pct+’%’);
+ring.appendChild(pctEl);
+var lbl = make(‘div’, ‘progress-label’, p.done+’/’+p.total);
+ringWrap.appendChild(ring);
+ringWrap.appendChild(lbl);
+hdrRight.appendChild(resetBtn);
+hdrRight.appendChild(ringWrap);
+hdr.appendChild(hdrRight);
+}
+main.appendChild(hdr);
+
+if (day.rest) {
+var card = make(‘div’, ‘rest-card’);
+var icon = make(‘div’, ‘rest-icon’); icon.textContent = ‘\uD83D\uDECC’;
+var rt = make(‘div’, ‘rest-title’, ‘Rest & Recover’);
+var rd = make(‘div’, ‘rest-desc’, day.restNote);
+card.appendChild(icon); card.appendChild(rt); card.appendChild(rd);
+main.appendChild(card);
+return;
+}
+
+if (p.done === p.total && p.total > 0) {
+var cb = make(‘div’, ‘complete-banner’);
+var ci = make(‘div’); ci.textContent = ‘\uD83D\uDD25’;
+ci.style.fontSize = ‘22px’;
+var ct = make(‘div’, ‘complete-text’);
+var cs = make(‘strong’, null, ‘Day Complete!’);
+ct.appendChild(cs);
+ct.appendChild(document.createTextNode(’ Solid work.’));
+cb.appendChild(ci); cb.appendChild(ct);
+main.appendChild(cb);
+}
+
+day.sections.forEach(function(sec) {
+var secEl = make(‘div’, ‘section’);
+var secLbl = make(‘div’, ‘section-label ‘+sec.type+’-label’, sec.label);
+secEl.appendChild(secLbl);
+
+```
+sec.exercises.forEach(function(ex, i) {
+  var isDone = !!state[key(day.id, sec.id, i)];
+  var row = make('div', 'exercise-row' + (isDone ? ' done' : ''));
+  var box = make('div', 'check-box');
+  if (isDone) box.textContent = '\u2713';
+  var info = make('div', 'ex-info');
+  var name = make('div', 'ex-name', ex.name);
+  var detail = make('div', 'ex-detail', ex.detail);
+  info.appendChild(name);
+  info.appendChild(detail);
+  row.appendChild(box);
+  row.appendChild(info);
+  if (ex.tag) {
+    var tagEl = make('span', 'ex-tag tag-'+ex.tag);
+    tagEl.textContent = ex.tag === 'hs' ? 'HS' : ex.tag === 'skill' ? 'skill' : 'core';
+    row.appendChild(tagEl);
+  }
+  (function(d,s,idx) {
+    row.addEventListener('click', function() { toggleEx(d,s,idx); });
+  })(day.id, sec.id, i);
+  secEl.appendChild(row);
+  if (ex.note) {
+    var note = make('div', 'note-row', ex.note);
+    secEl.appendChild(note);
+  }
+});
+main.appendChild(secEl);
+```
+
+});
+
+var db = make(‘div’, ‘deload-banner’);
+db.innerHTML = ‘<span style="font-size:18px">⚡</span><span class="deload-text">Every 4 to 6 weeks: cut all sets in half, keep handstand light, focus on perfect form.</span>’;
+main.appendChild(db);
+}
+
+function toggleEx(dayId, secId, exIdx) {
+var k = key(dayId, secId, exIdx);
+state[k] = !state[k];
+try { localStorage.setItem(‘cali_state’, JSON.stringify(state)); } catch(e) {}
+renderTabs();
+renderMain();
+}
+
+function resetDay(dayId) {
+var day = null;
+for (var i=0; i<DAYS.length; i++) { if (DAYS[i].id === dayId) { day = DAYS[i]; break; } }
+day.sections.forEach(function(sec) {
+sec.exercises.forEach(function(_,i) { delete state[key(dayId, sec.id, i)]; });
+});
+try { localStorage.setItem(‘cali_state’, JSON.stringify(state)); } catch(e) {}
+renderTabs();
+renderMain();
+}
+
+renderTabs();
+renderMain();
+</script>
+
+</body>
+</html>
